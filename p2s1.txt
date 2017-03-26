@@ -1,0 +1,46 @@
+Project 2, Status Report 1
+
+
+Include your signed team contract along with this file. 
+Fill out the following:
+
+
+List group members in alphabetical order by netid.
+
+
+Name/netid: 
+Daisy Zheng, dhz9
+Tasks to be completed by the next status report:
+
+
+Take datasets 3 & 4, find a complementary dataset and do one sketch for each.
+
+
+Name/netid: Divyansha Sehgal, ds974 
+Tasks to be completed by the next status report:
+
+
+Take datasets 5 & 6, find a complementary dataset and do one sketch for each.
+
+
+Name/netid: Richard He, rh455
+
+Tasks to be completed by the next status report:
+
+
+Take datasets 1 & 2, find a complementary dataset and do one sketch for each.
+
+
+
+At least six ideas for datasets (does not have to be final):
+
+
+1. Temperatures by country over the years (Use NOAA GHCN data) 
+
+2. Number of covers of a song (Million song database)
+
+3. Flights currently in the air (planefinder.net)
+4. Storm paths (ncdc.noaa.gov/stormevents/)
+5. Satellites in orbit (ucsusa.org/nuclear-weapons/space-weapons/satellite-database
+)
+6. Shakespeare text analysis (kaggle.com)
