@@ -1,0 +1,35 @@
+<!DOCTYPE HTML>
+
+<html>
+
+<head>
+	<TITLE>INFO 3300 - Project 2</TITLE>
+	<script src="https://d3js.org/d3.v4.min.js"></script>
+	<script src="http://d3js.org/topojson.v2.min.js"></script>
+
+<style>
+	svg { border: solid #ccc 1px; }\
+</style>
+</head>
+
+<body>
+<h3>INFO3300 Project 2</h3>
+<p>Daisy, Divyansha, Richard</p>
+<script>
+
+var parseRow = function parseRow(row) {
+	return {
+		name : "" + row.
+	};
+}
+
+
+d3.queue()
+.defer(d3.csv, "../UCS_Satellite_Database_officialname_7-1-16.xls")
+.await(function(error, sat){
+	console.log(sat);
+})
+
+</script>
+</body>
+
