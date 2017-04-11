@@ -17,15 +17,53 @@
 <p>Daisy, Divyansha, Richard</p>
 <script>
 
-var parseRow = function parseRow(row) {
+var parseSatRow = function parseSatRow(row) {
+	unRegistryParts = row["Country/Org of UN Registry"].split(" ");
+	if (unRegistryParts[0] === "NR"){
+		unRegistryParts[0] = "Not Registered";
+	}
+
+	var dateParts = row["Date of Launch"].split("/");
+	var lifeParts = row["Expected Lifetime"].split(" ");
+	
+	var lifetime;
+	if (lifeParts.length > 0) {
+		lifetime = +lifeParts[0];
+	} else { lifetime = -1; }
+
 	return {
-		name : "" + row.Name,
+		name : "" + row["Current Official Name of Satellite"],
+		unRegistry : unRegistryParts[0],
+		country : "" + row["Country of Operator/Owner"],
+		owner : "" + row["Operator/Owner"],
+		user : "" + row["Users"],
+		purpose : "" + row["Purpose"],
+		detPurpose : "" + row["Detailed Purpose"],
+		orbitClass : "" + row["Class of Orbit"],
+		orbitType : "" + row["Type of Orbit"],
+		longitudeGEO : Number(row["Longitude of GEO (degrees)"]),
+		perigee : Number(row["Perigee (km)"]),
+		apogee : Number(row["Apogee (km)"]),
+		eccent : Number(row["Eccentricity"]),
+		inclination : Number(row["Inclination (degrees)"]),
+		period : Number(row["Period (minutes)"]),
+		massLaunch : Number(row["Launch Mass (kg.)"]),
+		massDry : Number(row["Dry Mass (kg.)"]),
+		power : Number(row["Power (watts)"]),
+		launchDate : new Date(dateParts[2], dateParts[0]-1, dateParts[1]),
+		expLife : lifetime,
+		contractor : "" + row["Contractor"],
+		contractorCountry : "" + row["Country of Contractor"],
+		launchSite : "" + row["Launch Site"],
+		launchVehicle : "" + row["Launch Vehicle"],
+		cospar : "" + row["COSPAR Number"],
+		norad : Number(row["NORAD Number"])
 	};
 };
 
 
 d3.queue()
-.defer(d3.csv, "../satellite.csv")
+.defer(d3.csv, "../satellite.csv", parseSatRow)
 .await(function(error, satellite){
 	console.log(satellite);
 })
