@@ -19,15 +19,15 @@
 
 var parseRow = function parseRow(row) {
 	return {
-		name : "" + row.
+		name : "" + row.Name,
 	};
-}
+};
 
 
 d3.queue()
-.defer(d3.csv, "../UCS_Satellite_Database_officialname_7-1-16.xls")
-.await(function(error, sat){
-	console.log(sat);
+.defer(d3.csv, "../satellite.csv")
+.await(function(error, satellite){
+	console.log(satellite);
 })
 
 </script>
