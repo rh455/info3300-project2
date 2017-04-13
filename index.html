@@ -15,6 +15,7 @@
 <body>
 <h3>INFO3300 Project 2</h3>
 <p>Daisy, Divyansha, Richard</p>
+<div id="container"></div>
 <script>
 
 var parseSatRow = function parseSatRow(row) {
@@ -25,7 +26,7 @@ var parseSatRow = function parseSatRow(row) {
 
 	var dateParts = row["Date of Launch"].split("/");
 	var lifeParts = row["Expected Lifetime"].split(" ");
-	
+
 	var lifetime;
 	if (lifeParts.length > 0) {
 		lifetime = +lifeParts[0];
@@ -43,7 +44,7 @@ var parseSatRow = function parseSatRow(row) {
 		orbitType : "" + row["Type of Orbit"],
 		longitudeGEO : Number(row["Longitude of GEO (degrees)"]),
 		perigee : Number(row["Perigee (km)"]),
-		apogee : Number(row["Apogee (km)"]),
+		apogee : Number(row["Apogee (km)"].replace(",", "")),
 		eccent : Number(row["Eccentricity"]),
 		inclination : Number(row["Inclination (degrees)"]),
 		period : Number(row["Period (minutes)"]),
@@ -64,10 +65,57 @@ var parseSatRow = function parseSatRow(row) {
 
 d3.queue()
 .defer(d3.csv, "../satellite.csv", parseSatRow)
-.await(function(error, satellite){
-	console.log(satellite);
-})
+.await(function(error, satellites){
+	console.log(satellites);
+	var svg = d3.select("#container").append("svg").attr("width", 1000)
+																								 .attr("height", 1000);
+
+	var gradient = svg.append("linearGradient").attr("id", "gradient")
+																						 .attr("x1", "0%")
+																				     .attr("y1", "0%")
+																				     .attr("x2", "0%")
+																				     .attr("y2", "100%");
+
+	gradient.append("stop").attr("stop-color", "midnightblue")
+												 .attr("offset", "40%");
+  gradient.append("stop").attr("stop-color", "cadetblue")
+												 .attr("offset", "100%");
+
+	svg.append("rect")
+    .attr("width", "100%")
+    .attr("height", "100%")
+    .attr("fill", "url(#gradient)");
+
+	var apogeeExtent = d3.extent(satellites, function(d) { return d.apogee; });
+	console.log(d3.mean(satellites, function(d) { return d.apogee; }));
+	// console.log(apogeeExtent);
+
+	var nSatellites = satellites.length;
+
+	var xScale = d3.scaleLinear()
+								 .domain([0, nSatellites])
+								 .range([20,980]);
+
+	var yScale = d3.scaleLog()
+								 .domain([1, apogeeExtent[1]])
+								 .range([980,20]);
+
+	// var xAxis = d3.axisBottom(xScale);
+	// var yAxis = d3.axisLeft(yScale);
+
+	svg.selectAll("path").data(satellites)
+											 .enter()
+											 .append("path")
+											 .attr("d", d3.symbol().size(120).type(d3.symbolStar))
+											 .attr("fill", "white")
+											 .attr("stroke", "black")
+											 .attr("transform", function(d,i) {
+												 if (d.apogee > 0) {
+												 	 return "translate(" + xScale(i) + "," + yScale(d.apogee) + ")";
+												 } else {
+													 return "translate(-10,-10)"; }
+											 });
+});
 
 </script>
 </body>
-
