@@ -15,7 +15,17 @@
 <body>
 <h3>INFO3300 Project 2</h3>
 <p>Daisy, Divyansha, Richard</p>
-<div id="container"></div>
+
+<table width = 100%>
+<tr>
+<td rowspan="2" width = "1000px" height = "1000px"><div id="container"></div></td>
+<td><div id="satSelected"> </div></td>
+</tr>
+<tr>
+<td><div id="search"></div></td>
+</tr>
+</table>
+
 <script>
 
 var parseSatRow = function parseSatRow(row) {
@@ -33,15 +43,15 @@ var parseSatRow = function parseSatRow(row) {
 	} else { lifetime = -1; }
 
 	return {
-		name : "" + row["Current Official Name of Satellite"],
+		name : "" + row["Current Official Name of Satellite"].trim(),
 		unRegistry : unRegistryParts[0],
-		country : "" + row["Country of Operator/Owner"],
-		owner : "" + row["Operator/Owner"],
-		user : "" + row["Users"],
-		purpose : "" + row["Purpose"],
-		detPurpose : "" + row["Detailed Purpose"],
-		orbitClass : "" + row["Class of Orbit"],
-		orbitType : "" + row["Type of Orbit"],
+		country : "" + row["Country of Operator/Owner"].trim(),
+		owner : "" + row["Operator/Owner"].trim(),
+		user : "" + row["Users"].trim(),
+		purpose : "" + row["Purpose"].trim(),
+		detPurpose : "" + row["Detailed Purpose"].trim(),
+		orbitClass : "" + row["Class of Orbit"].trim(),
+		orbitType : "" + row["Type of Orbit"].trim(),
 		longitudeGEO : Number(row["Longitude of GEO (degrees)"]),
 		perigee : Number(row["Perigee (km)"]),
 		apogee : Number(row["Apogee (km)"].replace(",", "")),
@@ -53,11 +63,11 @@ var parseSatRow = function parseSatRow(row) {
 		power : Number(row["Power (watts)"]),
 		launchDate : new Date(dateParts[2], dateParts[0]-1, dateParts[1]),
 		expLife : lifetime,
-		contractor : "" + row["Contractor"],
-		contractorCountry : "" + row["Country of Contractor"],
-		launchSite : "" + row["Launch Site"],
-		launchVehicle : "" + row["Launch Vehicle"],
-		cospar : "" + row["COSPAR Number"],
+		contractor : "" + row["Contractor"].trim(),
+		contractorCountry : "" + row["Country of Contractor"].trim(),
+		launchSite : "" + row["Launch Site"].trim(),
+		launchVehicle : "" + row["Launch Vehicle"].trim(),
+		cospar : "" + row["COSPAR Number"].trim(),
 		norad : Number(row["NORAD Number"])
 	};
 };
@@ -68,23 +78,23 @@ d3.queue()
 .await(function(error, satellites){
 	console.log(satellites);
 	var svg = d3.select("#container").append("svg").attr("width", 1000)
-																								 .attr("height", 1000);
+		.attr("height", 1000);
 
 	var gradient = svg.append("linearGradient").attr("id", "gradient")
-																						 .attr("x1", "0%")
-																				     .attr("y1", "0%")
-																				     .attr("x2", "0%")
-																				     .attr("y2", "100%");
+		.attr("x1", "0%")
+	    .attr("y1", "0%")
+	    .attr("x2", "0%")
+	    .attr("y2", "100%");
 
 	gradient.append("stop").attr("stop-color", "midnightblue")
-												 .attr("offset", "40%");
-  gradient.append("stop").attr("stop-color", "cadetblue")
-												 .attr("offset", "100%");
+		.attr("offset", "40%");
+  	gradient.append("stop").attr("stop-color", "cadetblue")
+		.attr("offset", "100%");
 
 	svg.append("rect")
-    .attr("width", "100%")
-    .attr("height", "100%")
-    .attr("fill", "url(#gradient)");
+    	.attr("width", "100%")
+    	.attr("height", "100%")
+    	.attr("fill", "url(#gradient)");
 
 	var apogeeExtent = d3.extent(satellites, function(d) { return d.apogee; });
 	console.log(d3.mean(satellites, function(d) { return d.apogee; }));
@@ -93,28 +103,84 @@ d3.queue()
 	var nSatellites = satellites.length;
 
 	var xScale = d3.scaleLinear()
-								 .domain([0, nSatellites])
-								 .range([20,980]);
+		.domain([0, nSatellites])
+		.range([20,980]);
 
 	var yScale = d3.scaleLog()
-								 .domain([1, apogeeExtent[1]])
-								 .range([980,20]);
+		.domain([1, apogeeExtent[1]])
+		.range([980,20]);
 
 	// var xAxis = d3.axisBottom(xScale);
 	// var yAxis = d3.axisLeft(yScale);
 
-	svg.selectAll("path").data(satellites)
-											 .enter()
-											 .append("path")
-											 .attr("d", d3.symbol().size(120).type(d3.symbolStar))
-											 .attr("fill", "white")
-											 .attr("stroke", "black")
-											 .attr("transform", function(d,i) {
-												 if (d.apogee > 0) {
-												 	 return "translate(" + xScale(i) + "," + yScale(d.apogee) + ")";
-												 } else {
-													 return "translate(-10,-10)"; }
-											 });
+	var satIcons = svg.selectAll("path").data(satellites);
+
+	satIcons.enter()
+	  .append("path")
+		.attr("d", d3.symbol().size(120).type(d3.symbolStar))
+		.attr("fill", "white")
+		.attr("stroke", "black")
+		.attr("transform", function(d,i) {
+			if (d.apogee > 0) {
+			 	return "translate(" + xScale(i) + "," + yScale(d.apogee) + ")";
+			} else {
+				return "translate(-10,-10)"; }
+			});
+
+	var searchSet = {country : "", orbitClass : "", purpose : "", owner : ""};
+
+	//This function will highlight the satellites that satisfy all aspects of the filter red.
+	//searchSet: an object with 4 string properties: country, orbitClass, purpose, and owner
+	//obs: an object with at least above 4 properties
+	//If the value for a property is the empty string "", then there will be no filtering according to that property
+	function filterBy (searchSet) {
+		console.log(searchSet.country === "USA");
+		var satFiltered = satIcons.filter(function(d) {
+			for (var key in searchSet) {
+				if (!searchSet.hasOwnProperty(key) || searchSet[key] === "") { continue; }
+
+				if (searchSet[key] !== d[key]) { return true; }
+			}
+
+			return false;
+		})
+		satFiltered.attr("fill", "red");
+	}
+
+	//Creates a HTML select element with the options being the various property values
+	function dropDown (property){
+		var selElement = d3.select("#search").append("select")
+			.on("change", function(){
+				searchSet[property] = this.value;
+				filterBy(searchSet);
+			});
+
+		var allValues = satellites.map(function(row) { return row[property]; } );
+		//Used http://stackoverflow.com/questions/11246758/how-to-get-unique-values-in-an-array
+		var uniqueValues = allValues.filter(function(item, i, arr) { return item !== "" && arr.indexOf(item) === i; });
+		uniqueValues.sort();
+
+		selElement.selectAll("option").data(uniqueValues)
+		  .enter()
+		  .append("option")
+			.attr("value", function (d) { return d; })
+			.text(function (d) { return d; });
+
+		selElement.append("option")
+			.attr("value", "")
+			.text("");
+
+		selElement.append("option")
+			.attr("value", "title")
+			.attr("selected", "selected")
+			.attr("disabled", "disabled")
+			.text(property);
+	}
+
+	dropDown("country");
+	dropDown("orbitClass");
+	dropDown("purpose");
+	dropDown("owner");
 });
 
 </script>
