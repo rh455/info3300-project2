@@ -114,10 +114,11 @@ d3.queue()
 	// var xAxis = d3.axisBottom(xScale);
 	// var yAxis = d3.axisLeft(yScale);
 
-	var satIcons = svg.selectAll("path").data(satellites);
+	var satIcons = svg.selectAll("path.satellites").data(satellites);
 
 	satIcons.enter()
 	  .append("path")
+	  	.attr("class", "satellites")
 		.attr("d", d3.symbol().size(120).type(d3.symbolStar))
 		.attr("fill", "white")
 		.attr("stroke", "black")
@@ -141,22 +142,21 @@ d3.queue()
 
 	var searchSet = {country : "", orbitClass : "", purpose : "", owner : ""};
 
-	//This function will highlight the satellites that satisfy all aspects of the filter red.
-	//searchSet: an object with 4 string properties: country, orbitClass, purpose, and owner
+	//This function will remove the satellites that do not satisfy all aspects of the criteria.
+	//criteria: an object with 4 string properties: country, orbitClass, purpose, and owner
 	//obs: an object with at least above 4 properties
 	//If the value for a property is the empty string "", then there will be no filtering according to that property
-	function filterBy (searchSet) {
-		console.log(searchSet.country === "USA");
-		var satFiltered = satIcons.filter(function(d) {
-			for (var key in searchSet) {
-				if (!searchSet.hasOwnProperty(key) || searchSet[key] === "") { continue; }
+	function filterBy (criteria) {
+		var satFiltered = satellites.filter(function(item, i, arr) {
+			return (criteria.country === "" || criteria.country === item.country) && (criteria.orbitClass === "" || criteria.orbitClass === item.orbitClass) && (criteria.purpose === "" || criteria.purpose === item.purpose) && (criteria.owner === "" || criteria.owner === item.owner);
+		});
 
-				if (searchSet[key] !== d[key]) { return true; }
-			}
-
-			return false;
-		})
-		satFiltered.attr("fill", "red");
+		var satIcons = svg.selectAll("path.satellites")
+		  .data(satFiltered)
+		  	.attr("opacity", "1")
+		  	.attr("fill", "red");
+		satIcons.exit().attr("opacity", "0")
+			.attr("fill", "white");
 	}
 
 	//Creates a HTML select element with the options being the various property values
