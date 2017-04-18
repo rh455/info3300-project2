@@ -59,7 +59,7 @@ var parseSatRow = function parseSatRow(row) {
 		unRegistry : unRegistryParts[0],										//String: UN Registry country/organization					
 		countries : row["Country of Operator/Owner"].trim().split("/"),			//Array of Str: Countries that the owner is affiliated with
 		owner : "" + row["Operator/Owner"].trim(),								//String: Title of organization that owns satellite
-		user : "" + row["Users"].trim(),										//String: Categorical (Civil, Commercial, Government, Military)
+		user : row["Users"].trim().split("/"),									//Array of Str: Civil, Commercial, Government, Military
 		purpose : row["Purpose"].trim().split("/"),								//Array of Str: Purpose(s) of satellite
 		detPurpose : "" + row["Detailed Purpose"].trim(),						//String: Optional additional information for purpose
 		orbitClass : "" + row["Class of Orbit"].trim(),							//String: Categorical (LEO, MEO, GEO, Elliptical)
@@ -159,7 +159,7 @@ d3.queue()
 	//If the value for a property is the empty string "", then there will be no filtering according to that property
 	function filterBy (criteria) {
 		var satFiltered = satellites.filter(function(item, i, arr) {
-			return (criteria.countries === "" || item.countries.includes(criteria.countries)) && (criteria.orbitClass === "" || criteria.orbitClass === item.orbitClass) && (criteria.purpose === "" || item.purpose.includes(criteria.purpose)) && (criteria.user === "" || criteria.user === item.user);
+			return (criteria.countries === "" || item.countries.includes(criteria.countries)) && (criteria.orbitClass === "" || criteria.orbitClass === item.orbitClass) && (criteria.purpose === "" || item.purpose.includes(criteria.purpose)) && (criteria.user === "" || item.user.includes(criteria.user));
 		});
 
 		var satIcons = svg.selectAll("path.satellites")
