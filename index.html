@@ -36,40 +36,52 @@ var parseSatRow = function parseSatRow(row) {
 	}
 
 	var dateParts = row["Date of Launch"].split("/");
-	var lifeParts = row["Expected Lifetime"].split(" ");
 
-	var lifetime;
-	if (lifeParts.length > 0) {
-		lifetime = +lifeParts[0];
-	} else { lifetime = -1; }
+	//Processing expected lifetime 
+	//string.split() creates array of length 1 with empty string as index 0's value if the string is empty
+	var lifeParts = row["Expected Lifetime"].split(" ");
+	//Handle year ranges
+	var lifeRangeStr = lifeParts[0].split("-");
+	//Remove plus signs 
+	if (lifeRangeStr[0].charAt(lifeRangeStr[0].length - 1) === "+") { lifeRangeStr[0] = lifeRangeStr[0].slice(0, lifeRangeStr[0].length - 1); }
+	//Add index if necessary to make array length 2
+	if (lifeRangeStr.length < 2) { lifeRangeStr.push(-1); }
+	//Convert to numbers
+	var lifeRange = lifeRangeStr.map(function (value) {
+		//Handle blank values
+		if (value === "") { return -1;}
+		
+		return Number(value);
+	})
 
 	return {
-		name : "" + row["Current Official Name of Satellite"].trim(),
-		unRegistry : unRegistryParts[0],
-		country : "" + row["Country of Operator/Owner"].trim(),
-		owner : "" + row["Operator/Owner"].trim(),
-		user : "" + row["Users"].trim(),
-		purpose : "" + row["Purpose"].trim(),
-		detPurpose : "" + row["Detailed Purpose"].trim(),
-		orbitClass : "" + row["Class of Orbit"].trim(),
-		orbitType : "" + row["Type of Orbit"].trim(),
-		longitudeGEO : Number(row["Longitude of GEO (degrees)"]),
-		perigee : Number(row["Perigee (km)"]),
-		apogee : Number(row["Apogee (km)"].replace(",", "")),
-		eccent : Number(row["Eccentricity"]),
-		inclination : Number(row["Inclination (degrees)"]),
-		period : Number(row["Period (minutes)"]),
-		massLaunch : Number(row["Launch Mass (kg.)"]),
-		massDry : Number(row["Dry Mass (kg.)"]),
-		power : Number(row["Power (watts)"]),
-		launchDate : new Date(dateParts[2], dateParts[0]-1, dateParts[1]),
-		expLife : lifetime,
-		contractor : "" + row["Contractor"].trim(),
-		contractorCountry : "" + row["Country of Contractor"].trim(),
-		launchSite : "" + row["Launch Site"].trim(),
-		launchVehicle : "" + row["Launch Vehicle"].trim(),
-		cospar : "" + row["COSPAR Number"].trim(),
-		norad : Number(row["NORAD Number"])
+		name : "" + row["Current Official Name of Satellite"].trim(),			//String: Official name
+		unRegistry : unRegistryParts[0],										//String: UN Registry country/organization					
+		countries : row["Country of Operator/Owner"].trim().split("/"),			//Array of Str: Countries that the owner is affiliated with
+		owner : "" + row["Operator/Owner"].trim(),								//String: Title of organization that owns satellite
+		user : "" + row["Users"].trim(),										//String: Categorical (Civil, Commercial, Government, Military)
+		purpose : row["Purpose"].trim().split("/"),								//Array of Str: Purpose(s) of satellite
+		detPurpose : "" + row["Detailed Purpose"].trim(),						//String: Optional additional information for purpose
+		orbitClass : "" + row["Class of Orbit"].trim(),							//String: Categorical (LEO, MEO, GEO, Elliptical)
+		orbitType : "" + row["Type of Orbit"].trim(),							//String: Optional additional information for orbit
+		longitudeGEO : Number(row["Longitude of GEO (degrees)"]),				//Number: Longitude at which GEO satellites sit, 0 for non-GEO satellites
+		perigee : Number(row["Perigee (km)"].replace(",", "")),					//Number: Smallest distance from Earth for satellite in km
+		apogee : Number(row["Apogee (km)"].replace(",", "")),					//Number: Largest distance from Earth for satellite in km
+		eccent : Number(row["Eccentricity"]),									//Number: Measure from 0 to 1 of deviation from circular orbit
+		inclination : Number(row["Inclination (degrees)"]),						//Number: Angle in degrees of satellite from equatorial reference plane
+		period : Number(row["Period (minutes)"]),								//Number: Time in minutes for one complete orbit
+		massLaunch : Number(row["Launch Mass (kg.)"]),							//Number: Mass including fuel onboard satellite, 0 for unlisted
+		massDry : Number(row["Dry Mass (kg.)"]),								//Number: Mass excluding fuel onboard satellite, 0 for unlisted
+		power : Number(row["Power (watts)"]),									//Number: Watts produced by satellite, 0 for unlisted
+		launchDate : new Date(dateParts[2], dateParts[0]-1, dateParts[1]),		//Date: Date of launch
+		expLife : lifeRange,													//Array of Num: First item is beginning of range (-1 if missing), 
+																				//second item is end of range (-1 if missing)  
+		contractors : row["Contractor"].trim().split("/"),						//Array of Str: Names of contractor(s)
+		contractorCountries : row["Country of Contractor"].trim().split("/"),	//Array of Str: Countries contractor(s) affiliated with
+		launchSite : "" + row["Launch Site"].trim(),							//Str: Launch site
+		launchVehicle : "" + row["Launch Vehicle"].trim(),						//Str: Launch Vehicle
+		cospar : "" + row["COSPAR Number"].trim(),								//Str: COSPAR number
+		norad : Number(row["NORAD Number"])										//Number: NORAD number
 	};
 };
 
@@ -140,15 +152,14 @@ d3.queue()
 		.attr("fill", "transparent")
 		.attr("transform", "scale(0.68) translate(-10, -50)");
 
-	var searchSet = {country : "", orbitClass : "", purpose : "", owner : ""};
+	var searchSet = {countries : "", orbitClass : "", purpose : "", user : ""};
 
 	//This function will remove the satellites that do not satisfy all aspects of the criteria.
-	//criteria: an object with 4 string properties: country, orbitClass, purpose, and owner
-	//obs: an object with at least above 4 properties
+	//criteria: an object with 4 string properties: countries, orbitClass, purpose, and user
 	//If the value for a property is the empty string "", then there will be no filtering according to that property
 	function filterBy (criteria) {
 		var satFiltered = satellites.filter(function(item, i, arr) {
-			return (criteria.country === "" || criteria.country === item.country) && (criteria.orbitClass === "" || criteria.orbitClass === item.orbitClass) && (criteria.purpose === "" || criteria.purpose === item.purpose) && (criteria.owner === "" || criteria.owner === item.owner);
+			return (criteria.countries === "" || item.countries.includes(criteria.countries)) && (criteria.orbitClass === "" || criteria.orbitClass === item.orbitClass) && (criteria.purpose === "" || item.purpose.includes(criteria.purpose)) && (criteria.user === "" || criteria.user === item.user);
 		});
 
 		var satIcons = svg.selectAll("path.satellites")
@@ -168,31 +179,34 @@ d3.queue()
 			});
 
 		var allValues = satellites.map(function(row) { return row[property]; } );
-		//Used http://stackoverflow.com/questions/11246758/how-to-get-unique-values-in-an-array
+		//Collapse an array of arrays into just an array if necessary
+		if (Array.isArray(allValues[0])) { var allValues = [].concat.apply([], allValues); }
+		//Keep only unique values
 		var uniqueValues = allValues.filter(function(item, i, arr) { return item !== "" && arr.indexOf(item) === i; });
 		uniqueValues.sort();
-
-		selElement.selectAll("option").data(uniqueValues)
-		  .enter()
-		  .append("option")
-			.attr("value", function (d) { return d; })
-			.text(function (d) { return d; });
-
-		selElement.append("option")
-			.attr("value", "")
-			.text("");
 
 		selElement.append("option")
 			.attr("value", "title")
 			.attr("selected", "selected")
 			.attr("disabled", "disabled")
 			.text(property);
+
+		selElement.append("option")
+			.attr("value", "")
+			.text("");
+
+		selElement.selectAll("option.choice").data(uniqueValues)
+		  .enter()
+		  .append("option")
+		  	.attr("class", "choice")
+			.attr("value", function (d) { return d; })
+			.text(function (d) { return d; });
 	}
 
-	dropDown("country");
+	dropDown("countries");
 	dropDown("orbitClass");
 	dropDown("purpose");
-	dropDown("owner");
+	dropDown("user");
 });
 
 </script>
