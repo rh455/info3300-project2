@@ -35,6 +35,13 @@
 </tr>
 </table>
 
+<!-- <object type="image/svg+xml" data="satellite-icon.svg" id="satellite-svg" style="width:20px; height:20px"></object> -->
+
+<svg id="satelliteSVG" width="20" height="20"></svg>
+	<defs>
+    <use xlink:href="#satelliteSVG" />
+	</defs>
+</svg>
 
 <script>
 
@@ -95,8 +102,11 @@ var parseSatRow = function parseSatRow(row) {
 
 d3.queue()
 .defer(d3.csv, "../satellite.csv", parseSatRow)
-.await(function(error, satellites){
-	//satData is always the current selection of satellites 
+.defer(d3.xml, "../satellite-icon.svg")
+.await(function(error, satellites, icon){
+	var icon_node = document.importNode(icon.documentElement, true);
+
+	//satData is always the current selection of satellites
 	var satData = satellites.filter(function(d) {
 		var validGEO = true;
 		if (d.orbitClass == "GEO") {
@@ -146,18 +156,26 @@ d3.queue()
 			.domain([0, nSatellites])
 			.range([20,880]);
 
-		var satIcons = svg.selectAll("path.satellites").data(satellites);
+		var satIcons = svg.selectAll("g.satellites").data(satellites);
 
 		satIcons.enter()
-		  .append("path")
+			.append("g")
 			.attr("class", "satellites")
-			.attr("d", d3.symbol().size(120).type(d3.symbolStar))
+			.each(function() {
+				this.appendChild(icon_node.cloneNode(true));
+			})
+			// .append("circle")
+			// .attr("cx",0)
+			// .attr("cy", 0)
+			// .attr("r",4)
+			// .attr("width", 20)
+			// .attr("height", 20)
 			.attr("fill", "white")
 			.attr("stroke", "black")
 			.merge(satIcons)
 			.attr("opacity", 0)
 			.attr("transform", function(d,i) {
-			 		return "translate(" + xScale(i) + "," + yScale(d.apogee) + ")";
+				return "translate(" + xScale(i) + "," + yScale(d.apogee) + ")";
 			})
 			.transition()
 			.attr("opacity", 1);
@@ -170,11 +188,11 @@ d3.queue()
 	clicksvg = d3.select("#satSelected").append("svg")
 					.attr("width", 300)
 					.attr("height", 300);
-	
+
 
 	function handleMouse(satellites){
 
-		var satIcons = svg.selectAll("path.satellites").data(satellites);
+		var satIcons = svg.selectAll("g.satellites").data(satellites);
 
 		satIcons.on("mouseover", function(d){
 
@@ -207,7 +225,7 @@ d3.queue()
 			clicksvg.text("");
 		})
 
-		
+
 	}
 
 
@@ -216,10 +234,10 @@ d3.queue()
 
 
 	function updateSatellitesYears(satellites) {
-		var satIcons = svg.selectAll("path.satellites").data(satellites);
+		var satIcons = svg.selectAll("g.satellites").data(satellites);
 
 		satIcons.transition().attr("opacity", 0).filter( function(d) {
-			return parseInt(d.launchDate.getFullYear()) <= parseInt(d3.select("#year-slider").attr("value"));
+			return parseInt(d.launchDate.getFullYear()) < parseInt(d3.select("#year-slider").attr("value"));
 		})
 		.attr("opacity", 1);
 	}
@@ -276,7 +294,7 @@ d3.queue()
 			.domain([0, nSatellites])
 			.range([20,880]);
 
-		svg.selectAll("path.satellites").data(satData)
+		svg.selectAll("g.satellites").data(satData)
 		.attr("transform", function(d,i) {
 				var dx = ticks*(1436-d.period)/2000.0;
 				return "translate(" + (xScale(i) + dx + 900) % 900 + "," + yScale(d.apogee) + ")";
