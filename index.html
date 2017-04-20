@@ -27,9 +27,10 @@
 </tr>
 </table>
 
-<button id="orbit-button">Orbit Satellites</button>
+<button id="orbit-button" style="width:105px"><span id="orbit">Orbit Satellites</span></button>
 <button id="reset-orbit">Reset Orbits</button>
-
+<br>
+<p>Satellites since <b><span id="year">2016</span></b> (slide to change year):</p>
 <input type="range" id="year-slider" value="10" min="0" max="10">
 
 <script>
@@ -95,7 +96,11 @@ d3.queue()
 .defer(d3.csv, "../satellite.csv", parseSatRow)
 .await(function(error, satellites){
 	satellites = satellites.filter(function(d) {
-		return d.apogee > 0 && d.period > 0;
+		var validGEO = true;
+		if (d.orbitClass == "GEO") {
+			validGEO = d.period > 1436 && d.period < 1437;
+		}
+		return d.apogee > 0 && d.period > 0 && validGEO;
 	});
 
 	var svg = d3.select("#container").append("svg").attr("width", 900)
@@ -233,7 +238,7 @@ d3.queue()
 
 		svg.selectAll("path.satellites").data(satData)
 		.attr("transform", function(d,i) {
-				var dx = ticks*100.0/d.period;
+				var dx = ticks*(1436-d.period)/2000.0;
 				return "translate(" + (xScale(i) + dx) % 900 + "," + yScale(d.apogee) + ")";
 		});
 		ticks++;
@@ -251,9 +256,11 @@ d3.queue()
 	d3.select("#orbit-button").on("click", function() {
 		if (animating) {
 			timer.stop();
+			d3.select("#orbit").html("Orbit Satellites")
 			animating = false;
 		} else {
 			timer = d3.timer(animate);
+			d3.select("#orbit").html("Stop Orbit")
 			animating = true;
 		}
 	});
@@ -266,6 +273,7 @@ d3.queue()
 	var yearSlider = d3.select("#year-slider");
 	yearSlider.on('input', function() {
 		yearSlider.attr("value", this.value);
+		d3.select("#year").html(this.value);
 		updateSatellitesYears(satData);
 	});
 
