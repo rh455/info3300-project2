@@ -16,25 +16,23 @@
 <h3>INFO3300 Project 2</h3>
 <p>Daisy, Divyansha, Richard</p>
 
+<center><h1>Satellites in Orbit</h1></center>
+<p> Today, there are more than a thousand man-made satellites in the earth's orbit, being used for everything from navigation and communication to earth observation and research. Sapce research ingeneral, and satelitte launch in particular is a collaborative effort, not only because space belongs to no one country. This is also evident in the number of countries currently own active satellites, and the various instiruions that own them namely, civil, government, military or commercial. </p>
+
+<div id="search"></div>
+<button id="orbit-button" style="width:105px"><span id="orbit">Orbit Satellites</span></button>
+<button id="reset-orbit">Reset Orbits</button>
+<br>
+<p>Satellites since <b><span id="year">2016</span></b> (slide to change year):</p>
+<input type="range" id="year-slider" value="10" min="0" max="10">
+
 <table width = 100%>
 <tr>
-<td rowspan="2" width = "900px" height = "900px"><div id="container"></div><div id="skyline"></div></td>
+<td rowspan="2" width = "1400px" height = "900px"><div id="container"></div><div id="skyline"></div></td>
 <td><div id="satSelected"> </div>
 </td>
 </tr>
-<tr>
-<td><div id="search"></div></td>
-
-<td><button id="orbit-button" style="width:105px"><span id="orbit">Orbit Satellites</span></button>
-<button id="reset-orbit">Reset Orbits</button>
-<br>
-<p>Satellites launched in or before <b><span id="year">2016</span></b> (slide to change year):</p>
-<input type="range" id="year-slider" value="10" min="0" max="10">
-</td>
-
-</tr>
 </table>
-
 
 <script>
 
@@ -107,7 +105,7 @@ d3.queue()
 
 	console.log(satData);
 
-	var svg = d3.select("#container").append("svg").attr("width", 900)
+	var svg = d3.select("#container").append("svg").attr("width", 1400)
 		.attr("height", 900);
 
 	var gradient = svg.append("linearGradient").attr("id", "gradient")
@@ -146,7 +144,7 @@ d3.queue()
 
 		var xScale = d3.scaleLinear()
 			.domain([0, nSatellites])
-			.range([20,880]);
+			.range([20,1380]);
 
 		var satIcons = svg.selectAll("path.satellites").data(satellites);
 
@@ -182,34 +180,40 @@ d3.queue()
 	updateSatellites(satData);
 
 	//handling satelites click
-	clicksvg = d3.select("#satSelected").append("svg")
+	clicksvg = svg.append("svg")
 					.attr("width", 300)
-					.attr("height", 300);
+					.attr("height", 300)
+					.attr("x", 1100)
+					.attr("y", 0);
 
 	function handleMouseOver(d) {
 		clicksvg.append("text")
 			.attr("id", "clicktext")
 			.attr("x", 30)
 			.attr("y", 50)
-			.text('Satellite Name :' + d.name);
+			.text('Satellite Name :' + d.name)
+			.style("fill", "white");
 
 		clicksvg.append("text")
 			.attr("id", "clicktext")
 			.attr("x", 30)
 			.attr("y", 70)
-			.text('Country of Ownership :' + d.countries);
+			.text('Country of Ownership :' + d.countries)
+			.style("fill", "white");
 
 		clicksvg.append("text")
 			.attr("id", "clicktext")
 			.attr("x", 30)
 			.attr("y", 90)
-			.text('Purpose :' + d.purpose);
+			.text('Purpose :' + d.purpose)
+			.style("fill", "white");
 
 		clicksvg.append("text")
 			.attr("id", "clicktext")
 			.attr("x", 30)
 			.attr("y", 110)
-			.text('User :' + d.user);
+			.text('User :' + d.user)
+			.style("fill", "white");
 	}
 
 
@@ -269,12 +273,12 @@ d3.queue()
 
 		var xScale = d3.scaleLinear()
 			.domain([0, nSatellites])
-			.range([20,880]);
+			.range([20,1380]);
 
 		svg.selectAll("path.satellites").data(satData)
 		.attr("transform", function(d,i) {
 				var dx = ticks*(1436-d.period)/2000.0;
-				return "translate(" + (xScale(i) + dx + 900) % 900 + "," + yScale(d.apogee) + ")";
+				return "translate(" + (xScale(i) + dx + 1400) % 1400 + "," + yScale(d.apogee) + ")";
 		});
 		ticks++;
 	}
