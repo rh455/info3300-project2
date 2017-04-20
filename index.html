@@ -28,7 +28,7 @@
 <td><button id="orbit-button" style="width:105px"><span id="orbit">Orbit Satellites</span></button>
 <button id="reset-orbit">Reset Orbits</button>
 <br>
-<p>Satellites since <b><span id="year">2016</span></b> (slide to change year):</p>
+<p>Satellites launched in or before <b><span id="year">2016</span></b> (slide to change year):</p>
 <input type="range" id="year-slider" value="10" min="0" max="10">
 </td>
 
@@ -105,6 +105,8 @@ d3.queue()
 		return d.apogee > 0 && d.period > 0 && validGEO;
 	});
 
+	console.log(satData);
+
 	var svg = d3.select("#container").append("svg").attr("width", 900)
 		.attr("height", 900);
 
@@ -154,14 +156,27 @@ d3.queue()
 			.attr("d", d3.symbol().size(120).type(d3.symbolStar))
 			.attr("fill", "white")
 			.attr("stroke", "black")
-			.merge(satIcons)
-			.attr("opacity", 0)
+		  .merge(satIcons)
 			.attr("transform", function(d,i) {
 			 		return "translate(" + xScale(i) + "," + yScale(d.apogee) + ")";
 			})
-			.transition()
-			.attr("opacity", 1);
+			.on("mouseover", handleMouseOver)
+			.on("mouseout", function(d){
+				clicksvg.text("");
+			})
 		satIcons.exit().remove();
+
+		satIcons.filter( function(d) {
+			return parseInt(d.launchDate.getFullYear()) > parseInt(d3.select("#year-slider").attr("value"));
+		})
+		.attr("opacity", 0)
+		.on("mouseover", null);
+		
+		satIcons.filter( function(d) {
+			return parseInt(d.launchDate.getFullYear()) <= parseInt(d3.select("#year-slider").attr("value"));
+		})
+		.attr("opacity", 1)
+		.on("mouseover", handleMouseOver);
 	}
 
 	updateSatellites(satData);
@@ -170,58 +185,38 @@ d3.queue()
 	clicksvg = d3.select("#satSelected").append("svg")
 					.attr("width", 300)
 					.attr("height", 300);
-	
 
-	function handleMouse(satellites){
+	function handleMouseOver(d) {
+		clicksvg.append("text")
+			.attr("id", "clicktext")
+			.attr("x", 30)
+			.attr("y", 50)
+			.text('Satellite Name :' + d.name);
 
-		var satIcons = svg.selectAll("path.satellites").data(satellites);
+		clicksvg.append("text")
+			.attr("id", "clicktext")
+			.attr("x", 30)
+			.attr("y", 70)
+			.text('Country of Ownership :' + d.countries);
 
-		satIcons.on("mouseover", function(d){
+		clicksvg.append("text")
+			.attr("id", "clicktext")
+			.attr("x", 30)
+			.attr("y", 90)
+			.text('Purpose :' + d.purpose);
 
-			clicksvg.append("text")
-				.attr("id", "clicktext")
-				.attr("x", 30)
-				.attr("y", 50)
-				.text('Satellite Name :' + d.name);
-
-			clicksvg.append("text")
-				.attr("id", "clicktext")
-				.attr("x", 30)
-				.attr("y", 70)
-				.text('Country of Ownership :' + d.countries);
-
-			clicksvg.append("text")
-				.attr("id", "clicktext")
-				.attr("x", 30)
-				.attr("y", 90)
-				.text('Purpose :' + d.purpose);
-
-			clicksvg.append("text")
-				.attr("id", "clicktext")
-				.attr("x", 30)
-				.attr("y", 110)
-				.text('User :' + d.user);
-		});
-
-		satIcons.on("mouseout", function(d){
-			clicksvg.text("");
-		})
-
-		
+		clicksvg.append("text")
+			.attr("id", "clicktext")
+			.attr("x", 30)
+			.attr("y", 110)
+			.text('User :' + d.user);
 	}
-
-
-
-	handleMouse(satData);
 
 
 	function updateSatellitesYears(satellites) {
 		var satIcons = svg.selectAll("path.satellites").data(satellites);
 
-		satIcons.transition().attr("opacity", 0).filter( function(d) {
-			return parseInt(d.launchDate.getFullYear()) <= parseInt(d3.select("#year-slider").attr("value"));
-		})
-		.attr("opacity", 1);
+
 	}
 
 	var searchSet = {countries : "", orbitClass : "", purpose : "", user : ""};
@@ -282,7 +277,6 @@ d3.queue()
 				return "translate(" + (xScale(i) + dx + 900) % 900 + "," + yScale(d.apogee) + ")";
 		});
 		ticks++;
-		handleMouse(satData);
 	}
 
 	dropDown("countries");
@@ -315,7 +309,7 @@ d3.queue()
 	yearSlider.on('input', function() {
 		yearSlider.attr("value", this.value);
 		d3.select("#year").html(this.value);
-		updateSatellitesYears(satData);
+		updateSatellites(satData);
 	});
 
 });
