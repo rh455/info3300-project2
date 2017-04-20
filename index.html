@@ -8,7 +8,7 @@
 	<script src="http://d3js.org/topojson.v2.min.js"></script>
 
 <style>
-	svg { border: solid #ccc 1px; }\
+	svg { border: solid #ccc 1px; }
 </style>
 </head>
 
@@ -24,7 +24,6 @@
 </tr>
 <tr>
 <td><div id="search"></div></td>
-
 </tr>
 </table>
 
@@ -46,11 +45,9 @@ var parseSatRow = function parseSatRow(row) {
 
 	//Processing expected lifetime
 	//string.split() creates array of length 1 with empty string as index 0's value if the string is empty
-	var lifeParts = row["Expected Lifetime"].split(" ");
+	var lifeParts = row["Expected Lifetime"].replace("+","").split(" ");
 	//Handle year ranges
 	var lifeRangeStr = lifeParts[0].split("-");
-	//Remove plus signs
-	if (lifeRangeStr[0].charAt(lifeRangeStr[0].length - 1) === "+") { lifeRangeStr[0] = lifeRangeStr[0].slice(0, lifeRangeStr[0].length - 1); }
 	//Add index if necessary to make array length 2
 	if (lifeRangeStr.length < 2) { lifeRangeStr.push(-1); }
 	//Convert to numbers
@@ -96,7 +93,8 @@ var parseSatRow = function parseSatRow(row) {
 d3.queue()
 .defer(d3.csv, "../satellite.csv", parseSatRow)
 .await(function(error, satellites){
-	satellites = satellites.filter(function(d) {
+	//satData is always the current selection of satellites 
+	var satData = satellites.filter(function(d) {
 		var validGEO = true;
 		if (d.orbitClass == "GEO") {
 			validGEO = d.period > 1436 && d.period < 1437;
@@ -129,22 +127,14 @@ d3.queue()
 		.attr("fill", "black")
 		.attr("transform", "scale(0.68) translate(-95, 635)");
 
-	var apogeeExtent = d3.extent(satellites, function(d) { return d.apogee; });
-	var yearExtent = d3.extent(satellites, function(d) { return parseInt(d.launchDate.getFullYear()); })
+	var apogeeExtent = d3.extent(satData, function(d) { return d.apogee; });
+	var yearExtent = d3.extent(satData, function(d) { return parseInt(d.launchDate.getFullYear()); })
 
 	d3.select("#year-slider").attr("min", yearExtent[0]).attr("max", yearExtent[1]).attr("value", yearExtent[1]);
 
 	var yScale = d3.scaleLinear()
 	.domain([1, apogeeExtent[1]])
 	.range([450,20]);
-
-	var satData = satellites;
-
-	var nSatellites = satellites.length;
-
-		var xScale = d3.scaleLinear()
-			.domain([0, nSatellites])
-			.range([20,880]);
 
 	function updateSatellites(satellites) {
 		var nSatellites = satellites.length;
@@ -168,12 +158,10 @@ d3.queue()
 			})
 			.transition()
 			.attr("opacity", 1);
-		satIcons.exit().transition().attr("opacity", 0);
-
-		satData = satellites;
+		satIcons.exit().remove();
 	}
 
-	updateSatellites(satellites);
+	updateSatellites(satData);
 
 	//handling satelites click
 	clicksvg = d3.select("#satSelected").append("svg")
@@ -181,7 +169,7 @@ d3.queue()
 					.attr("height", 300);
 	
 
-	function handleMouse(satelites){
+	function handleMouse(satellites){
 
 		var satIcons = svg.selectAll("path.satellites").data(satellites);
 
@@ -221,7 +209,7 @@ d3.queue()
 
 
 
-	handleMouse(satellites);
+	handleMouse(satData);
 
 
 	function updateSatellitesYears(satellites) {
@@ -231,25 +219,17 @@ d3.queue()
 			return parseInt(d.launchDate.getFullYear()) <= parseInt(d3.select("#year-slider").attr("value"));
 		})
 		.attr("opacity", 1);
-		satData = satellites;
 	}
-
-	// var skylinesvg = d3.select("#skyline")
-	// 	.append("svg")
-	// 	.attr("width", 1000)
-	// 	.attr("height", 450);
 
 	var searchSet = {countries : "", orbitClass : "", purpose : "", user : ""};
 
-	//This function will remove the satellites that do not satisfy all aspects of the criteria.
+	//This function will return the satellites that do satisfy all aspects of the criteria.
 	//criteria: an object with 4 string properties: countries, orbitClass, purpose, and user
 	//If the value for a property is the empty string "", then there will be no filtering according to that property
 	function filterBy (criteria) {
-		var satFiltered = satellites.filter(function(item, i, arr) {
+		return satellites.filter(function(item, i, arr) {
 				return (criteria.countries === "" || item.countries.includes(criteria.countries)) && (criteria.orbitClass === "" || criteria.orbitClass === item.orbitClass) && (criteria.purpose === "" || item.purpose.includes(criteria.purpose)) && (criteria.user === "" || item.user.includes(criteria.user));
 		});
-
-		updateSatellites(satFiltered);
 	}
 
 	//Creates a HTML select element with the options being the various property values
@@ -257,7 +237,8 @@ d3.queue()
 		var selElement = d3.select("#search").append("select")
 			.on("change", function(){
 				searchSet[property] = this.value;
-				filterBy(searchSet);
+				satData = filterBy(searchSet);
+				updateSatellites(satData);
 			});
 
 		var allValues = satellites.map(function(row) { return row[property]; } );
