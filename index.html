@@ -133,9 +133,9 @@ d3.queue()
 
 	d3.select("#year-slider").attr("min", yearExtent[0]).attr("max", yearExtent[1]).attr("value", yearExtent[1]);
 
-	var yScale = d3.scaleLog()
+	var yScale = d3.scaleLinear()
 	.domain([1, apogeeExtent[1]])
-	.range([880,20]);
+	.range([450,20]);
 
 	var satData = satellites;
 
@@ -239,7 +239,7 @@ d3.queue()
 		svg.selectAll("path.satellites").data(satData)
 		.attr("transform", function(d,i) {
 				var dx = ticks*(1436-d.period)/2000.0;
-				return "translate(" + (xScale(i) + dx) % 900 + "," + yScale(d.apogee) + ")";
+				return "translate(" + (xScale(i) + dx + 900) % 900 + "," + yScale(d.apogee) + ")";
 		});
 		ticks++;
 	}
