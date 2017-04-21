@@ -16,32 +16,23 @@
 <h3>INFO3300 Project 2</h3>
 <p>Daisy, Divyansha, Richard</p>
 
-<table width = 100%>
-<tr>
-<td rowspan="2" width = "900px" height = "900px"><div id="container"></div><div id="skyline"></div></td>
-<td><div id="satSelected"> </div>
-</td>
-</tr>
-<tr>
-<td><div id="search"></div></td>
+<center><h1>Satellites in Orbit</h1></center>
+<p> Today, there are more than a thousand man-made satellites in the earth's orbit, being used for everything from navigation and communication to earth observation and research. Sapce research ingeneral, and satelitte launch in particular is a collaborative effort, not only because space belongs to no one country. This is also evident in the number of countries currently own active satellites, and the various instiruions that own them namely, civil, government, military or commercial. </p>
 
-<td><button id="orbit-button" style="width:105px"><span id="orbit">Orbit Satellites</span></button>
+<div id="search"></div>
+<button id="orbit-button" style="width:105px"><span id="orbit">Orbit Satellites</span></button>
 <button id="reset-orbit">Reset Orbits</button>
 <br>
 <p>Satellites since <b><span id="year">2016</span></b> (slide to change year):</p>
 <input type="range" id="year-slider" value="10" min="0" max="10">
-</td>
 
+<table width = 100%>
+<tr>
+<td rowspan="2" width = "1400px" height = "900px"><div id="container"></div><div id="skyline"></div></td>
+<td><div id="satSelected"> </div>
+</td>
 </tr>
 </table>
-
-<!-- <object type="image/svg+xml" data="satellite-icon.svg" id="satellite-svg" style="width:20px; height:20px"></object> -->
-
-<svg id="satelliteSVG" width="20" height="20"></svg>
-	<defs>
-    <use xlink:href="#satelliteSVG" />
-	</defs>
-</svg>
 
 <script>
 
@@ -115,7 +106,9 @@ d3.queue()
 		return d.apogee > 0 && d.period > 0 && validGEO;
 	});
 
-	var svg = d3.select("#container").append("svg").attr("width", 900)
+	console.log(satData);
+
+	var svg = d3.select("#container").append("svg").attr("width", 1400)
 		.attr("height", 900);
 
 	var gradient = svg.append("linearGradient").attr("id", "gradient")
@@ -154,92 +147,89 @@ d3.queue()
 
 		var xScale = d3.scaleLinear()
 			.domain([0, nSatellites])
-			.range([20,880]);
+			.range([20,1380]);
 
-		var satIcons = svg.selectAll("g.satellites").data(satellites);
+		var satIcons = svg.selectAll("circle.satellites").data(satellites);
 
 		satIcons.enter()
-			.append("g")
+			// .append("g")
+			// .each(function() {
+			// 	this.appendChild(icon_node.cloneNode(true));
+			// })
+			.append("circle")
 			.attr("class", "satellites")
-			.each(function() {
-				this.appendChild(icon_node.cloneNode(true));
-			})
-			// .append("circle")
-			// .attr("cx",0)
-			// .attr("cy", 0)
-			// .attr("r",4)
-			// .attr("width", 20)
-			// .attr("height", 20)
+			.attr("cx",0)
+			.attr("cy", 0)
+			.attr("r",6)
+			.attr("width", 20)
+			.attr("height", 20)
 			.attr("fill", "white")
 			.attr("stroke", "black")
-			.merge(satIcons)
-			.attr("opacity", 0)
+		  .merge(satIcons)
 			.attr("transform", function(d,i) {
 				return "translate(" + xScale(i) + "," + yScale(d.apogee) + ")";
 			})
-			.transition()
-			.attr("opacity", 1);
+			.on("mouseover", handleMouseOver)
+			.on("mouseout", function(d){
+				clicksvg.text("");
+			})
 		satIcons.exit().remove();
+
+		satIcons.filter( function(d) {
+			return parseInt(d.launchDate.getFullYear()) > parseInt(d3.select("#year-slider").attr("value"));
+		})
+		.attr("opacity", 0)
+		.on("mouseover", null);
+
+		satIcons.filter( function(d) {
+			return parseInt(d.launchDate.getFullYear()) <= parseInt(d3.select("#year-slider").attr("value"));
+		})
+		.attr("opacity", 1)
+		.on("mouseover", handleMouseOver);
 	}
 
 	updateSatellites(satData);
 
 	//handling satelites click
-	clicksvg = d3.select("#satSelected").append("svg")
+	clicksvg = svg.append("svg")
 					.attr("width", 300)
-					.attr("height", 300);
+					.attr("height", 300)
+					.attr("x", 1100)
+					.attr("y", 0);
 
+	function handleMouseOver(d) {
+		clicksvg.append("text")
+			.attr("id", "clicktext")
+			.attr("x", 30)
+			.attr("y", 50)
+			.text('Satellite Name :' + d.name)
+			.style("fill", "white");
 
-	function handleMouse(satellites){
+		clicksvg.append("text")
+			.attr("id", "clicktext")
+			.attr("x", 30)
+			.attr("y", 70)
+			.text('Country of Ownership :' + d.countries)
+			.style("fill", "white");
 
-		var satIcons = svg.selectAll("g.satellites").data(satellites);
+		clicksvg.append("text")
+			.attr("id", "clicktext")
+			.attr("x", 30)
+			.attr("y", 90)
+			.text('Purpose :' + d.purpose)
+			.style("fill", "white");
 
-		satIcons.on("mouseover", function(d){
-
-			clicksvg.append("text")
-				.attr("id", "clicktext")
-				.attr("x", 30)
-				.attr("y", 50)
-				.text('Satellite Name :' + d.name);
-
-			clicksvg.append("text")
-				.attr("id", "clicktext")
-				.attr("x", 30)
-				.attr("y", 70)
-				.text('Country of Ownership :' + d.countries);
-
-			clicksvg.append("text")
-				.attr("id", "clicktext")
-				.attr("x", 30)
-				.attr("y", 90)
-				.text('Purpose :' + d.purpose);
-
-			clicksvg.append("text")
-				.attr("id", "clicktext")
-				.attr("x", 30)
-				.attr("y", 110)
-				.text('User :' + d.user);
-		});
-
-		satIcons.on("mouseout", function(d){
-			clicksvg.text("");
-		})
-
-
+		clicksvg.append("text")
+			.attr("id", "clicktext")
+			.attr("x", 30)
+			.attr("y", 110)
+			.text('User :' + d.user)
+			.style("fill", "white");
 	}
 
 
-
-	handleMouse(satData);
-
-
 	function updateSatellitesYears(satellites) {
-		var satIcons = svg.selectAll("g.satellites").data(satellites);
-
-		satIcons.transition().attr("opacity", 0).filter( function(d) {
-			return parseInt(d.launchDate.getFullYear()) < parseInt(d3.select("#year-slider").attr("value"));
-		})
-		.attr("opacity", 1);
+		var satIcons = svg.selectAll("circle.satellites").data(satellites);
 	}
 
 	var searchSet = {countries : "", orbitClass : "", purpose : "", user : ""};
@@ -292,15 +282,14 @@ d3.queue()
 
 		var xScale = d3.scaleLinear()
 			.domain([0, nSatellites])
-			.range([20,880]);
+			.range([20,1380]);
 
-		svg.selectAll("g.satellites").data(satData)
+		svg.selectAll("circle.satellites").data(satData)
 		.attr("transform", function(d,i) {
 				var dx = ticks*(1436-d.period)/2000.0;
-				return "translate(" + (xScale(i) + dx + 900) % 900 + "," + yScale(d.apogee) + ")";
+				return "translate(" + (xScale(i) + dx + 1400) % 1400 + "," + yScale(d.apogee) + ")";
 		});
 		ticks++;
-		handleMouse(satData);
 	}
 
 	dropDown("countries");
@@ -333,7 +322,7 @@ d3.queue()
 	yearSlider.on('input', function() {
 		yearSlider.attr("value", this.value);
 		d3.select("#year").html(this.value);
-		updateSatellitesYears(satData);
+		updateSatellites(satData);
 	});
 
 });
