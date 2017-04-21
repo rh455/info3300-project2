@@ -93,10 +93,7 @@ var parseSatRow = function parseSatRow(row) {
 
 d3.queue()
 .defer(d3.csv, "../satellite.csv", parseSatRow)
-.defer(d3.xml, "../satellite-icon.svg")
-.await(function(error, satellites, icon){
-	var icon_node = document.importNode(icon.documentElement, true);
-
+.await(function(error, satellites){
 	//satData is always the current selection of satellites
 	var satData = satellites.filter(function(d) {
 		var validGEO = true;
@@ -105,8 +102,6 @@ d3.queue()
 		}
 		return d.apogee > 0 && d.period > 0 && validGEO;
 	});
-
-	console.log(satData);
 
 	var svg = d3.select("#container").append("svg").attr("width", 1400)
 		.attr("height", 900);
@@ -152,10 +147,6 @@ d3.queue()
 		var satIcons = svg.selectAll("circle.satellites").data(satellites);
 
 		satIcons.enter()
-			// .append("g")
-			// .each(function() {
-			// 	this.appendChild(icon_node.cloneNode(true));
-			// })
 			.append("circle")
 			.attr("class", "satellites")
 			.attr("cx",0)
