@@ -1,9 +1,0 @@
-Current issues:
-
-Mouseover works on satellites sthat are currently transparent. Can we have mouseover only work for currently opaque satellites?
-What does validGEO do?
-FilterBy and updateSatelliteYear don't pull data from each other. Can we refactor the two into one filter function?
-What is satData doing?
-Need to add more data to mouseover.
-I think we need to remove satellites on exit(), since we keep appending more paths.
-Change stars to satellites.
