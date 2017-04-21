@@ -19,6 +19,8 @@
 <center><h1>Satellites in Orbit</h1></center>
 <p> Today, there are more than a thousand man-made satellites in the earth's orbit, being used for everything from navigation and communication to earth observation and research. Sapce research ingeneral, and satelitte launch in particular is a collaborative effort, not only because space belongs to no one country. This is also evident in the number of countries currently own active satellites, and the various instiruions that own them namely, civil, government, military or commercial. </p>
 
+<p>The following representation gives you the opportunity to discover the satelites, their uses and their orbits for yourself. Click "Orbit Satellites" to discover how the various satellites move in relation to one another.</p>
+
 <div id="search"></div>
 <button id="orbit-button" style="width:105px"><span id="orbit">Orbit Satellites</span></button>
 <button id="reset-orbit">Reset Orbits</button>
@@ -129,7 +131,7 @@ d3.queue()
 
 	var yScale = d3.scaleLinear()
 	.domain([1, apogeeExtent[1]])
-	.range([850,20]);
+	.range([800,20]);
 
 	function updateSatellites(satellites) {
 		var nSatellites = satellites.length;
@@ -179,8 +181,8 @@ d3.queue()
 	clicksvg = svg.append("svg")
 					.attr("width", 300)
 					.attr("height", 300)
-					.attr("x", 1100)
-					.attr("y", 0);
+					.attr("x", 600)
+					.attr("y", 400);
 
 	function handleMouseOver(d) {
 		clicksvg.append("text")
@@ -188,28 +190,36 @@ d3.queue()
 			.attr("x", 30)
 			.attr("y", 50)
 			.text('Satellite Name :' + d.name)
-			.style("fill", "white");
+			.style("fill", "white")
+			.style("stroke-width", 2)
+			.style("font-size", 20);
 
 		clicksvg.append("text")
 			.attr("id", "clicktext")
 			.attr("x", 30)
 			.attr("y", 70)
 			.text('Country of Ownership :' + d.countries)
-			.style("fill", "white");
+			.style("fill", "white")
+			.style("stroke-width", 2)
+			.style("font-size", 20);
 
 		clicksvg.append("text")
 			.attr("id", "clicktext")
 			.attr("x", 30)
 			.attr("y", 90)
 			.text('Purpose :' + d.purpose)
-			.style("fill", "white");
+			.style("fill", "white")
+			.style("stroke-width", 2)
+			.style("font-size", 20);
 
 		clicksvg.append("text")
 			.attr("id", "clicktext")
 			.attr("x", 30)
 			.attr("y", 110)
 			.text('User :' + d.user)
-			.style("fill", "white");
+			.style("fill", "white")
+			.style("stroke-width", 2)
+			.style("font-size", 20);
 	}
 
 
